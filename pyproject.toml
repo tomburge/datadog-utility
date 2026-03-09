@@ -59,3 +59,6 @@ packages = ["src/ddutil"]
 
 [tool.hatch.build.targets.sdist]
 include = ["/src", "/pyproject.toml", "/README.md", "/LICENSE", "/licenses"]
+
+[dependency-groups]
+docs = ["sphinx>=7.2.0", "sphinx-rtd-theme>=2.0.0", "sphinx-click>=5.1.0"]

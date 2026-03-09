@@ -1,0 +1,426 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Configuration &mdash; ddutil</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Examples" href="examples.html" />
+    <link rel="prev" title="CLI Reference" href="commands.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            ddutil
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#requirements">Requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#using-pip-recommended">Using pip (Recommended)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#using-uv">Using UV</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#from-source">From Source</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#set-up-environment-variables">1. Set Up Environment Variables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#preview-changes-dry-run">2. Preview Changes (Dry-Run)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#apply-the-integration">3. Apply the Integration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#verify-the-integration">4. Verify the Integration</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="commands.html">CLI Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="commands.html#global-options">Global Options</a></li>
+<li class="toctree-l2"><a class="reference internal" href="commands.html#commands">Commands</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="commands.html#ddutil">ddutil</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="commands.html#ddutil-apply">apply</a></li>
+<li class="toctree-l4"><a class="reference internal" href="commands.html#ddutil-delete">delete</a></li>
+<li class="toctree-l4"><a class="reference internal" href="commands.html#ddutil-status">status</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="commands.html#status-sync-values"><code class="docutils literal notranslate"><span class="pre">status</span></code> Sync Values</a></li>
+<li class="toctree-l2"><a class="reference internal" href="commands.html#status-validated-settings"><code class="docutils literal notranslate"><span class="pre">status</span></code> Validated Settings</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Configuration</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#priority">Priority</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#environment-variables-reference">Environment Variables Reference</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#required">Required</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#aws-iam">AWS / IAM</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#datadog-integration">DataDog / Integration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#monitoring">Monitoring</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#service-toggles">Service Toggles</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#trace-toggles">Trace Toggles</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#metric-settings">Metric Settings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#resource-settings">Resource Settings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#application">Application</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Guides</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#first-time-setup">First-Time Setup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#multiple-environments">Multiple Environments</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#iam-role-tags">IAM Role Tags</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#restrict-monitoring-scope">Restrict Monitoring Scope</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#json-output-for-automation">JSON Output for Automation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#govcloud">GovCloud</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#china-partition">China Partition</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#missing-required-variables">Missing Required Variables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#aws-authentication-errors">AWS Authentication Errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#datadog-api-errors">DataDog API Errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#configuration-drift">Configuration Drift</a></li>
+<li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#ssl-certificate-errors-internal-ca">SSL Certificate Errors (Internal CA)</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">ddutil</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Configuration</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/configuration.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="configuration">
+<h1>Configuration<a class="headerlink" href="#configuration" title="Link to this heading"></a></h1>
+<section id="priority">
+<h2>Priority<a class="headerlink" href="#priority" title="Link to this heading"></a></h2>
+<p>Configuration values are resolved in the following order (highest to lowest):</p>
+<ol class="arabic simple">
+<li><p><strong>CLI argument</strong></p></li>
+<li><p><strong>Environment variable</strong> (from <code class="docutils literal notranslate"><span class="pre">.env</span></code> or shell)</p></li>
+</ol>
+</section>
+<section id="environment-variables-reference">
+<h2>Environment Variables Reference<a class="headerlink" href="#environment-variables-reference" title="Link to this heading"></a></h2>
+<p>Copy <code class="docutils literal notranslate"><span class="pre">.env.example</span></code> to <code class="docutils literal notranslate"><span class="pre">.env</span></code> and fill in the values relevant to your environment.</p>
+<section id="required">
+<h3>Required<a class="headerlink" href="#required" title="Link to this heading"></a></h3>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 30.0%" />
+<col style="width: 70.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Variable</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DD_API_KEY</span></code></p></td>
+<td><p>DataDog API key</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DD_APP_KEY</span></code></p></td>
+<td><p>DataDog application key</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">AWS_ACCOUNT_ID</span></code></p></td>
+<td><p>AWS account ID to integrate</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DD_ACCOUNT_ID</span></code></p></td>
+<td><p>DataDog account ID (required by <code class="docutils literal notranslate"><span class="pre">apply</span></code>)</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="aws-iam">
+<h3>AWS / IAM<a class="headerlink" href="#aws-iam" title="Link to this heading"></a></h3>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 30.0%" />
+<col style="width: 25.0%" />
+<col style="width: 45.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Variable</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">AWS_PROFILE</span></code></p></td>
+<td><p><em>(default credential chain)</em></p></td>
+<td><p>AWS CLI profile name</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DD_IAM_ROLE_NAME</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">datadog-integration-role</span></code></p></td>
+<td><p>IAM role name</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DD_IAM_TAGS</span></code></p></td>
+<td></td>
+<td><p>Comma-separated <code class="docutils literal notranslate"><span class="pre">Key=Value</span></code> tag pairs (1–50)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DD_MANAGED_POLICIES</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ReadOnlyAccess,SecurityAudit</span></code></p></td>
+<td><p>Managed policy ARNs</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DD_POLICY_ACTIONS</span></code></p></td>
+<td><p><em>(32 default actions)</em></p></td>
+<td><p>Extra IAM inline policy actions</p></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Tag format:</strong> <code class="docutils literal notranslate"><span class="pre">ApplicationName=datadog,Environment=sandbox,CostCenter=platform</span></code></p>
+</section>
+<section id="datadog-integration">
+<h3>DataDog / Integration<a class="headerlink" href="#datadog-integration" title="Link to this heading"></a></h3>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 30.0%" />
+<col style="width: 20.0%" />
+<col style="width: 50.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Variable</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DD_SITE</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">datadoghq.com</span></code></p></td>
+<td><p>DataDog site (e.g. <code class="docutils literal notranslate"><span class="pre">datadoghq.eu</span></code>)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DD_PARTITION</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">aws</span></code></p></td>
+<td><p>AWS partition (<code class="docutils literal notranslate"><span class="pre">aws</span></code>, <code class="docutils literal notranslate"><span class="pre">aws-cn</span></code>, <code class="docutils literal notranslate"><span class="pre">aws-us-gov</span></code>)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DATADOG_VERIFY_SSL</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">true</span></code></p></td>
+<td><p>SSL verification for DataDog API calls</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="monitoring">
+<h3>Monitoring<a class="headerlink" href="#monitoring" title="Link to this heading"></a></h3>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 30.0%" />
+<col style="width: 25.0%" />
+<col style="width: 45.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Variable</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DD_REGIONS</span></code></p></td>
+<td><p><em>(all)</em></p></td>
+<td><p>Comma-separated regions to monitor</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DD_SERVICES</span></code></p></td>
+<td><p><em>(from</em> <code class="docutils literal notranslate"><span class="pre">DD_SERVICE_*</span></code> <em>)</em></p></td>
+<td><p>Comma-separated service namespace overrides</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DD_TRACES</span></code></p></td>
+<td><p><em>(from</em> <code class="docutils literal notranslate"><span class="pre">DD_TRACE_*</span></code> <em>)</em></p></td>
+<td><p>Comma-separated X-Ray tracing overrides</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="service-toggles">
+<h3>Service Toggles<a class="headerlink" href="#service-toggles" title="Link to this heading"></a></h3>
+<p>Individual services can be enabled or disabled without listing every namespace:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Toggle specific services on or off</span>
+<span class="nv">DD_SERVICE_LAMBDA</span><span class="o">=</span><span class="nb">true</span>
+<span class="nv">DD_SERVICE_EC2</span><span class="o">=</span><span class="nb">true</span>
+<span class="nv">DD_SERVICE_RDS</span><span class="o">=</span><span class="nb">false</span>
+
+<span class="c1"># Override all toggles with an explicit list</span>
+<span class="nv">DD_SERVICES</span><span class="o">=</span>AWS/Lambda,AWS/EC2
+</pre></div>
+</div>
+<p>See <code class="docutils literal notranslate"><span class="pre">.env.example</span></code> for the full list of 113 <code class="docutils literal notranslate"><span class="pre">DD_SERVICE_*</span></code> variables grouped by category.</p>
+</section>
+<section id="trace-toggles">
+<h3>Trace Toggles<a class="headerlink" href="#trace-toggles" title="Link to this heading"></a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">DD_TRACE_LAMBDA</span><span class="o">=</span><span class="nb">true</span>
+<span class="nv">DD_TRACE_APP_SYNC</span><span class="o">=</span><span class="nb">false</span>
+
+<span class="c1"># Override all toggles</span>
+<span class="nv">DD_TRACES</span><span class="o">=</span>AWS/Lambda
+</pre></div>
+</div>
+</section>
+<section id="metric-settings">
+<h3>Metric Settings<a class="headerlink" href="#metric-settings" title="Link to this heading"></a></h3>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 35.0%" />
+<col style="width: 15.0%" />
+<col style="width: 50.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Variable</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DD_METRIC_AUTOMUTE</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">true</span></code></p></td>
+<td><p>Auto-mute monitors on EC2 shutdowns</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DD_METRIC_COLLECT_CLOUDWATCH</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">true</span></code></p></td>
+<td><p>Collect CloudWatch alarms</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DD_METRIC_COLLECT_CUSTOM</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">false</span></code></p></td>
+<td><p>Collect custom metrics</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DD_METRIC_COLLECT_METRICS</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">true</span></code></p></td>
+<td><p>Enable metric collection</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DD_METRIC_ENABLE</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">true</span></code></p></td>
+<td><p>Enable metrics globally</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="resource-settings">
+<h3>Resource Settings<a class="headerlink" href="#resource-settings" title="Link to this heading"></a></h3>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 35.0%" />
+<col style="width: 15.0%" />
+<col style="width: 50.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Variable</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DD_RESOURCE_COLLECT_CSPM</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">false</span></code></p></td>
+<td><p>Cloud Security Posture Management</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DD_RESOURCE_COLLECT_EXTENDED</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">true</span></code></p></td>
+<td><p>Extended resource collection</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="application">
+<h3>Application<a class="headerlink" href="#application" title="Link to this heading"></a></h3>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 15.0%" />
+<col style="width: 65.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Variable</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">LOG_LEVEL</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">INFO</span></code></p></td>
+<td><p>Logging level (<code class="docutils literal notranslate"><span class="pre">DEBUG</span></code>, <code class="docutils literal notranslate"><span class="pre">INFO</span></code>, <code class="docutils literal notranslate"><span class="pre">WARNING</span></code>, <code class="docutils literal notranslate"><span class="pre">ERROR</span></code>)</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="commands.html" class="btn btn-neutral float-left" title="CLI Reference" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="examples.html" class="btn btn-neutral float-right" title="Examples" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Tom Burge.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,596 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CLI Reference &mdash; ddutil</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Configuration" href="configuration.html" />
+    <link rel="prev" title="Quick Start" href="quickstart.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            ddutil
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#requirements">Requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#using-pip-recommended">Using pip (Recommended)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#using-uv">Using UV</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#from-source">From Source</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#set-up-environment-variables">1. Set Up Environment Variables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#preview-changes-dry-run">2. Preview Changes (Dry-Run)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#apply-the-integration">3. Apply the Integration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#verify-the-integration">4. Verify the Integration</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">CLI Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#global-options">Global Options</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#commands">Commands</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#ddutil">ddutil</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#ddutil-apply">apply</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ddutil-delete">delete</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ddutil-status">status</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#status-sync-values"><code class="docutils literal notranslate"><span class="pre">status</span></code> Sync Values</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#status-validated-settings"><code class="docutils literal notranslate"><span class="pre">status</span></code> Validated Settings</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html#priority">Priority</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html#environment-variables-reference">Environment Variables Reference</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="configuration.html#required">Required</a></li>
+<li class="toctree-l3"><a class="reference internal" href="configuration.html#aws-iam">AWS / IAM</a></li>
+<li class="toctree-l3"><a class="reference internal" href="configuration.html#datadog-integration">DataDog / Integration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="configuration.html#monitoring">Monitoring</a></li>
+<li class="toctree-l3"><a class="reference internal" href="configuration.html#service-toggles">Service Toggles</a></li>
+<li class="toctree-l3"><a class="reference internal" href="configuration.html#trace-toggles">Trace Toggles</a></li>
+<li class="toctree-l3"><a class="reference internal" href="configuration.html#metric-settings">Metric Settings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="configuration.html#resource-settings">Resource Settings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="configuration.html#application">Application</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Guides</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#first-time-setup">First-Time Setup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#multiple-environments">Multiple Environments</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#iam-role-tags">IAM Role Tags</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#restrict-monitoring-scope">Restrict Monitoring Scope</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#json-output-for-automation">JSON Output for Automation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#govcloud">GovCloud</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#china-partition">China Partition</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#missing-required-variables">Missing Required Variables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#aws-authentication-errors">AWS Authentication Errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#datadog-api-errors">DataDog API Errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#configuration-drift">Configuration Drift</a></li>
+<li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#ssl-certificate-errors-internal-ca">SSL Certificate Errors (Internal CA)</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">ddutil</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">CLI Reference</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/commands.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="cli-reference">
+<h1>CLI Reference<a class="headerlink" href="#cli-reference" title="Link to this heading"></a></h1>
+<section id="global-options">
+<h2>Global Options<a class="headerlink" href="#global-options" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">--version</span></code>, <code class="docutils literal notranslate"><span class="pre">--license</span></code>, and <code class="docutils literal notranslate"><span class="pre">--env-file</span></code> must be placed <strong>before</strong> the subcommand
+name. <code class="docutils literal notranslate"><span class="pre">--verbose</span></code> and <code class="docutils literal notranslate"><span class="pre">--quiet</span></code> can be placed either before <strong>or</strong> after the subcommand.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 22.0%" />
+<col style="width: 8.0%" />
+<col style="width: 20.0%" />
+<col style="width: 50.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Option</p></th>
+<th class="head"><p>Short</p></th>
+<th class="head"><p>Position</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">--version</span></code></p></td>
+<td></td>
+<td><p>before</p></td>
+<td><p>Show version and exit</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">--license</span></code></p></td>
+<td></td>
+<td><p>before</p></td>
+<td><p>Show license information and exit</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">--verbose</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">-v</span></code></p></td>
+<td><p>before or after</p></td>
+<td><p>Enable debug-level output</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">--quiet</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">-q</span></code></p></td>
+<td><p>before or after</p></td>
+<td><p>Suppress all non-error output</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">--env-file</span> <span class="pre">PATH</span></code></p></td>
+<td></td>
+<td><p>before</p></td>
+<td><p>Load a specific <code class="docutils literal notranslate"><span class="pre">.env</span></code> file (overrides auto-load of <code class="docutils literal notranslate"><span class="pre">.env</span></code>)</p></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>ddutil<span class="w"> </span>--help
+ddutil<span class="w"> </span>--version
+ddutil<span class="w"> </span>--verbose<span class="w"> </span>apply
+ddutil<span class="w"> </span>apply<span class="w"> </span>--verbose
+ddutil<span class="w"> </span>--env-file<span class="w"> </span>prod.env<span class="w"> </span>apply
+</pre></div>
+</div>
+</section>
+<hr class="docutils" />
+<section id="commands">
+<h2>Commands<a class="headerlink" href="#commands" title="Link to this heading"></a></h2>
+<section id="ddutil">
+<h3>ddutil<a class="headerlink" href="#ddutil" title="Link to this heading"></a></h3>
+<p>DataDog AWS Integration Utility</p>
+<p>Manage DataDog integrations for AWS accounts with ease.</p>
+<p class="rubric">Usage</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>ddutil<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>COMMAND<span class="w"> </span><span class="o">[</span>ARGS<span class="o">]</span>...
+</pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ddutil-version">
+<span class="sig-name descname"><span class="pre">--version</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ddutil-version" title="Link to this definition"></a></dt>
+<dd><p>Show the version and exit.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ddutil-license">
+<span class="sig-name descname"><span class="pre">--license</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ddutil-license" title="Link to this definition"></a></dt>
+<dd><p>Show license information and exit</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ddutil-v">
+<span id="cmdoption-ddutil-verbose"></span><span class="sig-name descname"><span class="pre">-v</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--verbose</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ddutil-v" title="Link to this definition"></a></dt>
+<dd><p>Enable verbose output</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ddutil-q">
+<span id="cmdoption-ddutil-quiet"></span><span class="sig-name descname"><span class="pre">-q</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--quiet</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ddutil-q" title="Link to this definition"></a></dt>
+<dd><p>Suppress non-error output</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ddutil-env-file">
+<span class="sig-name descname"><span class="pre">--env-file</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;env_file&gt;</span></span><a class="headerlink" href="#cmdoption-ddutil-env-file" title="Link to this definition"></a></dt>
+<dd><p>Path to .env file to load</p>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">'.env'</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<section id="ddutil-apply">
+<h4>apply<a class="headerlink" href="#ddutil-apply" title="Link to this heading"></a></h4>
+<p>Create or update DataDog integration for an AWS account.</p>
+<p>Checks whether the IAM role and DataDog account integration already exist and
+creates or updates each as needed.</p>
+<dl class="simple">
+<dt>Example:</dt><dd><p>ddutil apply –account-id 123456789 –profile aws-prod –dd-account-id YOUR_DD_ACCOUNT</p>
+</dd>
+</dl>
+<p class="rubric">Usage</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>ddutil<span class="w"> </span>apply<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span>
+</pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ddutil-apply-account-id">
+<span class="sig-name descname"><span class="pre">--account-id</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;account_id&gt;</span></span><a class="headerlink" href="#cmdoption-ddutil-apply-account-id" title="Link to this definition"></a></dt>
+<dd><p>AWS Account ID</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ddutil-apply-profile">
+<span class="sig-name descname"><span class="pre">--profile</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;profile&gt;</span></span><a class="headerlink" href="#cmdoption-ddutil-apply-profile" title="Link to this definition"></a></dt>
+<dd><p>AWS CLI profile name</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ddutil-apply-role-name">
+<span class="sig-name descname"><span class="pre">--role-name</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;role_name&gt;</span></span><a class="headerlink" href="#cmdoption-ddutil-apply-role-name" title="Link to this definition"></a></dt>
+<dd><p>IAM role name for DataDog integration</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ddutil-apply-dd-account-id">
+<span class="sig-name descname"><span class="pre">--dd-account-id</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;dd_account_id&gt;</span></span><a class="headerlink" href="#cmdoption-ddutil-apply-dd-account-id" title="Link to this definition"></a></dt>
+<dd><p>DataDog account ID</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ddutil-apply-regions">
+<span class="sig-name descname"><span class="pre">--regions</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;regions&gt;</span></span><a class="headerlink" href="#cmdoption-ddutil-apply-regions" title="Link to this definition"></a></dt>
+<dd><p>Comma-separated list of AWS regions</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ddutil-apply-services">
+<span class="sig-name descname"><span class="pre">--services</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;services&gt;</span></span><a class="headerlink" href="#cmdoption-ddutil-apply-services" title="Link to this definition"></a></dt>
+<dd><p>Comma-separated list of AWS services to monitor</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ddutil-apply-traces">
+<span class="sig-name descname"><span class="pre">--traces</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;traces&gt;</span></span><a class="headerlink" href="#cmdoption-ddutil-apply-traces" title="Link to this definition"></a></dt>
+<dd><p>Comma-separated list of AWS services for X-Ray tracing</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ddutil-apply-managed-policies">
+<span class="sig-name descname"><span class="pre">--managed-policies</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;managed_policies&gt;</span></span><a class="headerlink" href="#cmdoption-ddutil-apply-managed-policies" title="Link to this definition"></a></dt>
+<dd><p>Comma-separated list of AWS managed policy ARNs</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ddutil-apply-policy-actions">
+<span class="sig-name descname"><span class="pre">--policy-actions</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;policy_actions&gt;</span></span><a class="headerlink" href="#cmdoption-ddutil-apply-policy-actions" title="Link to this definition"></a></dt>
+<dd><p>Comma-separated list of additional IAM actions</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ddutil-apply-partition">
+<span class="sig-name descname"><span class="pre">--partition</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;partition&gt;</span></span><a class="headerlink" href="#cmdoption-ddutil-apply-partition" title="Link to this definition"></a></dt>
+<dd><p>AWS partition (aws, aws-cn, aws-us-gov)</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ddutil-apply-metric-automute">
+<span class="sig-name descname"><span class="pre">--metric-automute</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;metric_automute&gt;</span></span><a class="headerlink" href="#cmdoption-ddutil-apply-metric-automute" title="Link to this definition"></a></dt>
+<dd><p>Enable/disable automuting (true/false)</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ddutil-apply-metric-collect-cloudwatch">
+<span class="sig-name descname"><span class="pre">--metric-collect-cloudwatch</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;metric_collect_cloudwatch&gt;</span></span><a class="headerlink" href="#cmdoption-ddutil-apply-metric-collect-cloudwatch" title="Link to this definition"></a></dt>
+<dd><p>Collect CloudWatch alarms (true/false)</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ddutil-apply-metric-collect-custom">
+<span class="sig-name descname"><span class="pre">--metric-collect-custom</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;metric_collect_custom&gt;</span></span><a class="headerlink" href="#cmdoption-ddutil-apply-metric-collect-custom" title="Link to this definition"></a></dt>
+<dd><p>Collect custom metrics (true/false)</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ddutil-apply-metric-collect-metrics">
+<span class="sig-name descname"><span class="pre">--metric-collect-metrics</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;metric_collect_metrics&gt;</span></span><a class="headerlink" href="#cmdoption-ddutil-apply-metric-collect-metrics" title="Link to this definition"></a></dt>
+<dd><p>Enable metric collection (true/false)</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ddutil-apply-metric-enable">
+<span class="sig-name descname"><span class="pre">--metric-enable</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;metric_enable&gt;</span></span><a class="headerlink" href="#cmdoption-ddutil-apply-metric-enable" title="Link to this definition"></a></dt>
+<dd><p>Enable metrics collection globally (true/false)</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ddutil-apply-resource-collect-cspm">
+<span class="sig-name descname"><span class="pre">--resource-collect-cspm</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;resource_collect_cspm&gt;</span></span><a class="headerlink" href="#cmdoption-ddutil-apply-resource-collect-cspm" title="Link to this definition"></a></dt>
+<dd><p>Enable CSPM collection (true/false)</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ddutil-apply-resource-collect-extended">
+<span class="sig-name descname"><span class="pre">--resource-collect-extended</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;resource_collect_extended&gt;</span></span><a class="headerlink" href="#cmdoption-ddutil-apply-resource-collect-extended" title="Link to this definition"></a></dt>
+<dd><p>Enable extended resource collection (true/false)</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ddutil-apply-dry-run">
+<span class="sig-name descname"><span class="pre">--dry-run</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ddutil-apply-dry-run" title="Link to this definition"></a></dt>
+<dd><p>Preview changes without applying</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ddutil-apply-tags">
+<span class="sig-name descname"><span class="pre">--tags</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;tags&gt;</span></span><a class="headerlink" href="#cmdoption-ddutil-apply-tags" title="Link to this definition"></a></dt>
+<dd><p>Comma-separated IAM role tags in Key=Value format (e.g. Env=prod,Team=ops)</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ddutil-apply-v">
+<span id="cmdoption-ddutil-apply-verbose"></span><span class="sig-name descname"><span class="pre">-v</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--verbose</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ddutil-apply-v" title="Link to this definition"></a></dt>
+<dd><p>Enable verbose output</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ddutil-apply-q">
+<span id="cmdoption-ddutil-apply-quiet"></span><span class="sig-name descname"><span class="pre">-q</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--quiet</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ddutil-apply-q" title="Link to this definition"></a></dt>
+<dd><p>Suppress non-error output</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ddutil-apply-env-file">
+<span class="sig-name descname"><span class="pre">--env-file</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;env_file&gt;</span></span><a class="headerlink" href="#cmdoption-ddutil-apply-env-file" title="Link to this definition"></a></dt>
+<dd><p>Path to .env file to load</p>
+</dd></dl>
+
+</section>
+<section id="ddutil-delete">
+<h4>delete<a class="headerlink" href="#ddutil-delete" title="Link to this heading"></a></h4>
+<p>Delete DataDog integration for an AWS account.</p>
+<p>This command deletes the IAM role and removes the account from DataDog.</p>
+<dl class="simple">
+<dt>Example:</dt><dd><p>ddutil delete –account-id 123456789 –role-name datadog-integration-role –confirm</p>
+</dd>
+</dl>
+<p class="rubric">Usage</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>ddutil<span class="w"> </span>delete<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span>
+</pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ddutil-delete-account-id">
+<span class="sig-name descname"><span class="pre">--account-id</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;account_id&gt;</span></span><a class="headerlink" href="#cmdoption-ddutil-delete-account-id" title="Link to this definition"></a></dt>
+<dd><p>AWS Account ID</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ddutil-delete-profile">
+<span class="sig-name descname"><span class="pre">--profile</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;profile&gt;</span></span><a class="headerlink" href="#cmdoption-ddutil-delete-profile" title="Link to this definition"></a></dt>
+<dd><p>AWS CLI profile name</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ddutil-delete-role-name">
+<span class="sig-name descname"><span class="pre">--role-name</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;role_name&gt;</span></span><a class="headerlink" href="#cmdoption-ddutil-delete-role-name" title="Link to this definition"></a></dt>
+<dd><p>IAM role name for DataDog integration</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ddutil-delete-confirm">
+<span class="sig-name descname"><span class="pre">--confirm</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ddutil-delete-confirm" title="Link to this definition"></a></dt>
+<dd><p>Skip confirmation prompt</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ddutil-delete-v">
+<span id="cmdoption-ddutil-delete-verbose"></span><span class="sig-name descname"><span class="pre">-v</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--verbose</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ddutil-delete-v" title="Link to this definition"></a></dt>
+<dd><p>Enable verbose output</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ddutil-delete-q">
+<span id="cmdoption-ddutil-delete-quiet"></span><span class="sig-name descname"><span class="pre">-q</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--quiet</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ddutil-delete-q" title="Link to this definition"></a></dt>
+<dd><p>Suppress non-error output</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ddutil-delete-env-file">
+<span class="sig-name descname"><span class="pre">--env-file</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;env_file&gt;</span></span><a class="headerlink" href="#cmdoption-ddutil-delete-env-file" title="Link to this definition"></a></dt>
+<dd><p>Path to .env file to load</p>
+</dd></dl>
+
+</section>
+<section id="ddutil-status">
+<h4>status<a class="headerlink" href="#ddutil-status" title="Link to this heading"></a></h4>
+<p>Check the status of DataDog integration.</p>
+<p>This command validates that the IAM role and DataDog account are configured correctly.</p>
+<dl class="simple">
+<dt>Example:</dt><dd><p>ddutil status –account-id 123456789</p>
+</dd>
+</dl>
+<p class="rubric">Usage</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>ddutil<span class="w"> </span>status<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span>
+</pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ddutil-status-account-id">
+<span class="sig-name descname"><span class="pre">--account-id</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;account_id&gt;</span></span><a class="headerlink" href="#cmdoption-ddutil-status-account-id" title="Link to this definition"></a></dt>
+<dd><p>AWS Account ID</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ddutil-status-profile">
+<span class="sig-name descname"><span class="pre">--profile</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;profile&gt;</span></span><a class="headerlink" href="#cmdoption-ddutil-status-profile" title="Link to this definition"></a></dt>
+<dd><p>AWS CLI profile name</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ddutil-status-role-name">
+<span class="sig-name descname"><span class="pre">--role-name</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;role_name&gt;</span></span><a class="headerlink" href="#cmdoption-ddutil-status-role-name" title="Link to this definition"></a></dt>
+<dd><p>IAM role name for DataDog integration</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ddutil-status-dd-account-id">
+<span class="sig-name descname"><span class="pre">--dd-account-id</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;dd_account_id&gt;</span></span><a class="headerlink" href="#cmdoption-ddutil-status-dd-account-id" title="Link to this definition"></a></dt>
+<dd><p>DataDog account ID</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ddutil-status-o">
+<span id="cmdoption-ddutil-status-output"></span><span class="sig-name descname"><span class="pre">-o</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--output</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;output&gt;</span></span><a class="headerlink" href="#cmdoption-ddutil-status-o" title="Link to this definition"></a></dt>
+<dd><p>Output format</p>
+<dl class="field-list simple">
+<dt class="field-odd">Options<span class="colon">:</span></dt>
+<dd class="field-odd"><p>text | json</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ddutil-status-v">
+<span id="cmdoption-ddutil-status-verbose"></span><span class="sig-name descname"><span class="pre">-v</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--verbose</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ddutil-status-v" title="Link to this definition"></a></dt>
+<dd><p>Enable verbose output</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ddutil-status-q">
+<span id="cmdoption-ddutil-status-quiet"></span><span class="sig-name descname"><span class="pre">-q</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--quiet</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ddutil-status-q" title="Link to this definition"></a></dt>
+<dd><p>Suppress non-error output</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ddutil-status-env-file">
+<span class="sig-name descname"><span class="pre">--env-file</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;env_file&gt;</span></span><a class="headerlink" href="#cmdoption-ddutil-status-env-file" title="Link to this definition"></a></dt>
+<dd><p>Path to .env file to load</p>
+</dd></dl>
+
+</section>
+</section>
+</section>
+<hr class="docutils" />
+<section id="status-sync-values">
+<h2><code class="docutils literal notranslate"><span class="pre">status</span></code> Sync Values<a class="headerlink" href="#status-sync-values" title="Link to this heading"></a></h2>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 25.0%" />
+<col style="width: 75.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Status</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Synced</span></code></p></td>
+<td><p>IAM role and DataDog account exist and config matches <code class="docutils literal notranslate"><span class="pre">.env</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Out</span> <span class="pre">Of</span> <span class="pre">Sync</span></code></p></td>
+<td><p>Both sides exist but one or more settings differ</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Partial</span></code></p></td>
+<td><p>Only one of IAM role / DataDog account exists</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Not</span> <span class="pre">Configured</span></code></p></td>
+<td><p>Neither side exists</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Unknown</span></code></p></td>
+<td><p>AWS or DataDog connectivity failed — cannot determine state</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="status-validated-settings">
+<h2><code class="docutils literal notranslate"><span class="pre">status</span></code> Validated Settings<a class="headerlink" href="#status-validated-settings" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>IAM role existence and ARN</p></li>
+<li><p>Attached managed policies vs. expected</p></li>
+<li><p>IAM role tags vs. <code class="docutils literal notranslate"><span class="pre">DD_IAM_TAGS</span></code></p></li>
+<li><p>DataDog account registration and External ID</p></li>
+<li><p>Role name consistency between IAM and DataDog</p></li>
+<li><p>AWS partition</p></li>
+<li><p>Monitored regions and service namespaces</p></li>
+<li><p>Metric settings (automute, CloudWatch alarms, custom metrics, enabled)</p></li>
+<li><p>Resource settings (CSPM, extended collection)</p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="quickstart.html" class="btn btn-neutral float-left" title="Quick Start" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="configuration.html" class="btn btn-neutral float-right" title="Configuration" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Tom Burge.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
