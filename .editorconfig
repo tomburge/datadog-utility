@@ -1,0 +1,31 @@
+# EditorConfig file
+# For more information, visit https://editorconfig.org
+
+root = true
+
+# Global settings (fallback for all files)
+[*]
+charset = utf-8
+end_of_line = lf
+indent_style = space
+indent_size = 4
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# Python-specific settings
+[*.py]
+indent_size = 4
+max_line_length = 79
+
+# Markdown-specific settings
+[*.md]
+indent_size = 2
+trim_trailing_whitespace = false  # Allow trailing spaces for Markdown line breaks
+
+# reStructuredText-specific settings
+[*.rst]
+indent_size = 4
+
+# YAML-specific settings
+[*.{yaml,yml}]
+indent_size = 2

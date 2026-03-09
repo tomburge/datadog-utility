@@ -1,0 +1,89 @@
+CLI Reference
+=============
+
+Global Options
+--------------
+
+``--version``, ``--license``, and ``--env-file`` must be placed **before** the subcommand
+name. ``--verbose`` and ``--quiet`` can be placed either before **or** after the subcommand.
+
+.. list-table::
+   :header-rows: 1
+   :widths: 22 8 20 50
+
+   * - Option
+     - Short
+     - Position
+     - Description
+   * - ``--version``
+     -
+     - before
+     - Show version and exit
+   * - ``--license``
+     -
+     - before
+     - Show license information and exit
+   * - ``--verbose``
+     - ``-v``
+     - before or after
+     - Enable debug-level output
+   * - ``--quiet``
+     - ``-q``
+     - before or after
+     - Suppress all non-error output
+   * - ``--env-file PATH``
+     -
+     - before
+     - Load a specific ``.env`` file (overrides auto-load of ``.env``)
+
+.. code-block:: bash
+
+   ddutil --help
+   ddutil --version
+   ddutil --verbose apply
+   ddutil apply --verbose
+   ddutil --env-file prod.env apply
+
+----
+
+Commands
+--------
+
+.. click:: ddutil.cli:main
+   :prog: ddutil
+   :nested: full
+
+----
+
+``status`` Sync Values
+----------------------
+
+.. list-table::
+   :header-rows: 1
+   :widths: 25 75
+
+   * - Status
+     - Meaning
+   * - ``Synced``
+     - IAM role and DataDog account exist and config matches ``.env``
+   * - ``Out Of Sync``
+     - Both sides exist but one or more settings differ
+   * - ``Partial``
+     - Only one of IAM role / DataDog account exists
+   * - ``Not Configured``
+     - Neither side exists
+   * - ``Unknown``
+     - AWS or DataDog connectivity failed — cannot determine state
+
+``status`` Validated Settings
+------------------------------
+
+- IAM role existence and ARN
+- Attached managed policies vs. expected
+- IAM role tags vs. ``DD_IAM_TAGS``
+- DataDog account registration and External ID
+- Role name consistency between IAM and DataDog
+- AWS partition
+- Monitored regions and service namespaces
+- Metric settings (automute, CloudWatch alarms, custom metrics, enabled)
+- Resource settings (CSPM, extended collection)

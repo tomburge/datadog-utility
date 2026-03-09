@@ -1,0 +1,61 @@
+[build-system]
+requires = ["hatchling", "hatch-vcs"]
+build-backend = "hatchling.build"
+
+[project]
+name = "ddutil"
+dynamic = ["version"]
+description = "A CLI tool for managing DataDog AWS integrations"
+readme = "README.md"
+authors = [{ name = "Tom Burge", email = "tom@tomburge.org" }]
+license = { text = "MIT" }
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: System Administrators",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: System :: Systems Administration",
+    "Topic :: Utilities",
+]
+keywords = ["datadog", "aws", "integration", "cli", "devops", "monitoring"]
+requires-python = ">=3.12"
+dependencies = [
+    "boto3>=1.28.0",
+    "certifi>=2023.7.22",
+    "click>=8.0.0",
+    "datadog-api-client>=2.0.0",
+    "loguru>=0.7.0",
+    "pydantic>=2.0.0",
+    "python-dotenv>=0.19.0",
+    "rich>=10.0.0",
+]
+
+[project.scripts]
+ddutil = "ddutil.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/tomburge/datadog-utility"
+Repository = "https://github.com/tomburge/datadog-utility"
+"Bug Tracker" = "https://github.com/tomburge/datadog-utility/issues"
+
+[tool.hatch.version]
+source = "vcs"
+raw-options = { local_scheme = "no-local-version" }
+
+[tool.hatch.build.hooks.vcs]
+version-file = "src/ddutil/_version.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/ddutil"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"LICENSE" = "ddutil/LICENSE"
+"licenses" = "ddutil/licenses"
+
+[tool.hatch.build.targets.sdist]
+include = ["/src", "/pyproject.toml", "/README.md", "/LICENSE", "/licenses"]
