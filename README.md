@@ -175,6 +175,8 @@ ddutil apply [OPTIONS]
 | `--resource-collect-cspm BOOL` | `DD_RESOURCE_COLLECT_CSPM` | `false` | Enable Cloud Security Posture Management |
 | `--resource-collect-extended BOOL` | `DD_RESOURCE_COLLECT_EXTENDED` | `true` | Enable extended resource collection |
 | `--dry-run` | | `false` | Preview changes without applying |
+| `--aws-only` | | `false` | Apply AWS IAM role/policy/tag changes only |
+| `--dd-only` | | `false` | Apply DataDog integration changes only |
 | `--env-file PATH` | | | Path to `.env` file |
 
 **Examples:**
@@ -182,6 +184,12 @@ ddutil apply [OPTIONS]
 ```bash
 # Apply using .env file defaults
 ddutil apply
+
+# Apply AWS IAM side only
+ddutil apply --aws-only
+
+# Apply DataDog side only
+ddutil apply --dd-only
 
 # Preview without making changes
 ddutil apply --dry-run
@@ -205,6 +213,16 @@ ddutil apply --partition aws-us-gov --profile govcloud
 ddutil apply --env-file envs/prod.env
 ```
 
+**Note on first-time `--dd-only` runs:**
+
+When you run `ddutil apply --dd-only` for a brand-new integration, DataDog can return an External ID that must be added to the IAM trust policy. Because AWS updates are intentionally skipped in `--dd-only` mode, follow up with:
+
+```bash
+ddutil apply --aws-only
+```
+
+to complete the trust policy update.
+
 ---
 
 ### `status`
@@ -222,6 +240,8 @@ ddutil status [OPTIONS]
 | `--role-name TEXT` | `DD_IAM_ROLE_NAME` | `datadog-integration-role` | IAM role name |
 | `--dd-account-id TEXT` | `DD_ACCOUNT_ID` | | DataDog account ID |
 | `--output`, `-o` | | `text` | Output format: `text` or `json` |
+| `--aws-only` | | `false` | Check AWS IAM status only |
+| `--dd-only` | | `false` | Check DataDog integration status only |
 | `--env-file PATH` | | | Path to `.env` file |
 
 **Sync status values:**
@@ -251,6 +271,12 @@ ddutil status [OPTIONS]
 ```bash
 # Basic status check
 ddutil status
+
+# Check only AWS IAM status
+ddutil status --aws-only
+
+# Check only DataDog status
+ddutil status --dd-only
 
 # Check specific account with verbose output
 ddutil --verbose status --account-id 123456789012

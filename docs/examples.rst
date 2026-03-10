@@ -67,6 +67,23 @@ Restrict Monitoring Scope
    # DD_SERVICES=AWS/Lambda,AWS/EC2
    ddutil apply
 
+AWS-Only and DataDog-Only Operations
+------------------------------------
+
+.. code-block:: bash
+
+   # Apply only AWS IAM role/policy/tag changes
+   ddutil apply --aws-only
+
+   # Apply only DataDog integration changes
+   ddutil apply --dd-only
+
+   # Check only AWS IAM status
+   ddutil status --aws-only
+
+   # Check only DataDog integration status
+   ddutil status --dd-only
+
 JSON Output for Automation
 ---------------------------
 

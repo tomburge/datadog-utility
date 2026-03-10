@@ -481,6 +481,19 @@ def get_traces_from_env() -> list[str]:
     return enabled_traces
 
 
+def resolve_target_scope(
+    aws_only: bool, dd_only: bool, command_name: str
+) -> tuple[bool, bool]:
+    """Resolve which integration sides should run for a command."""
+    if aws_only and dd_only:
+        raise click.UsageError(
+            f"{command_name}: --aws-only and --dd-only are mutually exclusive"
+        )
+    run_aws = not dd_only
+    run_dd = not aws_only
+    return run_aws, run_dd
+
+
 #########################################################################################
 ### CLI Commands
 #########################################################################################
@@ -548,6 +561,8 @@ def cli(ctx, verbose, quiet, env_file):
     help="Enable extended resource collection (true/false)",
 )
 @click.option("--dry-run", is_flag=True, help="Preview changes without applying")
+@click.option("--aws-only", is_flag=True, help="Apply AWS IAM changes only")
+@click.option("--dd-only", is_flag=True, help="Apply DataDog integration changes only")
 @click.option(
     "--tags",
     help="Comma-separated IAM role tags in Key=Value format (e.g. Env=prod,Team=ops)",
@@ -585,6 +600,8 @@ def apply(
     resource_collect_cspm,
     resource_collect_extended,
     dry_run,
+    aws_only,
+    dd_only,
     tags,
     verbose,
     quiet,
@@ -610,11 +627,18 @@ def apply(
 
     logger.debug("Apply command invoked")
 
+    run_aws, run_dd = resolve_target_scope(aws_only, dd_only, "apply")
+    target_label = "AWS + DataDog"
+    if run_aws and not run_dd:
+        target_label = "AWS only"
+    elif run_dd and not run_aws:
+        target_label = "DataDog only"
+
     # Get configuration values (CLI args > Environment variables > Defaults)
     aws_account_id = get_config_value(
         cli_value=account_id,
         env_var="AWS_ACCOUNT_ID",
-        required=True,
+        required=run_dd,
         param_name="AWS Account ID",
     )
     aws_profile = get_config_value(
@@ -634,7 +658,7 @@ def apply(
     dd_acct_id = get_config_value(
         cli_value=dd_account_id,
         env_var="DD_ACCOUNT_ID",
-        required=True,
+        required=run_aws,
         param_name="DataDog Account ID",
     )
 
@@ -771,151 +795,187 @@ def apply(
         table.add_row("AWS Account ID", aws_account_id)
         table.add_row("AWS Profile", aws_profile)
         table.add_row("IAM Role Name", iam_role_name)
-        table.add_row("DataDog Account ID", dd_acct_id)
-        table.add_row("Partition", dd_partition)
-        table.add_row("Regions", ", ".join(dd_regions) if dd_regions else "All")
-        table.add_row("Services", ", ".join(dd_services) if dd_services else "Default")
-        table.add_row("Traces", ", ".join(dd_traces) if dd_traces else "None")
-        table.add_row("Managed Policies", str(len(aws_managed_policies)))
-        table.add_row("Policy Actions", str(len(aws_policy_actions)))
-        table.add_row("Metric Automute", str(metric_settings["automute"]))
-        table.add_row(
-            "Metric Collect CloudWatch", str(metric_settings["collect_cloudwatch"])
-        )
-        table.add_row("Metric Collect Custom", str(metric_settings["collect_custom"]))
-        table.add_row("Metric Collect Metrics", str(metric_settings["collect_metrics"]))
-        table.add_row("Metric Enable", str(metric_settings["enable"]))
-        table.add_row("Resource Collect CSPM", str(resource_settings["collect_cspm"]))
-        table.add_row(
-            "Resource Collect Extended", str(resource_settings["collect_extended"])
-        )
+        table.add_row("Target", target_label)
+        if run_aws:
+            table.add_row("DataDog Account ID", dd_acct_id)
+            table.add_row("Managed Policies", str(len(aws_managed_policies)))
+            table.add_row("Policy Actions", str(len(aws_policy_actions)))
+        if run_dd:
+            table.add_row("Partition", dd_partition)
+            table.add_row("Regions", ", ".join(dd_regions) if dd_regions else "All")
+            table.add_row(
+                "Services", ", ".join(dd_services) if dd_services else "Default"
+            )
+            table.add_row("Traces", ", ".join(dd_traces) if dd_traces else "None")
+            table.add_row("Metric Automute", str(metric_settings["automute"]))
+            table.add_row(
+                "Metric Collect CloudWatch", str(metric_settings["collect_cloudwatch"])
+            )
+            table.add_row(
+                "Metric Collect Custom", str(metric_settings["collect_custom"])
+            )
+            table.add_row(
+                "Metric Collect Metrics", str(metric_settings["collect_metrics"])
+            )
+            table.add_row("Metric Enable", str(metric_settings["enable"]))
+            table.add_row(
+                "Resource Collect CSPM", str(resource_settings["collect_cspm"])
+            )
+            table.add_row(
+                "Resource Collect Extended", str(resource_settings["collect_extended"])
+            )
 
         console.print(table)
         console.print("\n[yellow]Run without --dry-run to apply changes[/yellow]")
         return
 
     try:
-        # Create AWS session and clients
-        logger.debug(f"Creating base session using profile {aws_profile}")
-        base_session = create_session(profile_name=aws_profile)
+        iam_client = None
+        if run_aws:
+            # Create AWS session and clients
+            logger.debug(f"Creating base session using profile {aws_profile}")
+            base_session = create_session(profile_name=aws_profile)
 
-        logger.debug("Creating IAM client")
-        iam_client = create_client(
-            region_name="us-east-1",
-            service_name="iam",
-            session=base_session,
-        )
-
-        # Check whether the IAM role already exists to decide create vs update
-        existing_role = get_role(iam_client, iam_role_name)
-        if existing_role:
-            console.print(
-                f"[cyan]IAM role {iam_role_name} exists — updating policies[/cyan]"
+            logger.debug("Creating IAM client")
+            iam_client = create_client(
+                region_name="us-east-1",
+                service_name="iam",
+                session=base_session,
             )
-        else:
-            console.print(f"[cyan]IAM role {iam_role_name} not found — creating[/cyan]")
 
-        role_response = create_or_update_dd_role(
-            client=iam_client,
-            dd_account_id=dd_acct_id,
-            managed_policies=aws_managed_policies,
-            policy_actions=aws_policy_actions,
-            role_name=iam_role_name,
-        )
-
-        if not role_response:
-            console.print("[red]Failed to create/update IAM role[/red]")
-            sys.exit(1)
-
-        if existing_role:
-            # Reconcile attached/inline policies when the role already existed
-            policy_response = ensure_role_policies(
-                client=iam_client,
-                role_name=iam_role_name,
-                managed_policies=aws_managed_policies,
-                policy_actions=aws_policy_actions,
-            )
-            if not policy_response:
+            # Check whether the IAM role already exists to decide create vs update
+            existing_role = get_role(iam_client, iam_role_name)
+            if existing_role:
                 console.print(
-                    "[yellow]Warning: Some policies may not have been updated correctly[/yellow]"
+                    f"[cyan]IAM role {iam_role_name} exists — updating policies[/cyan]"
                 )
-
-        # Sync IAM role tags (create or update path)
-        if iam_role_tags:
-            tag_response = sync_role_tags(
-                client=iam_client,
-                role_name=iam_role_name,
-                tags=iam_role_tags,
-            )
-            if not tag_response:
-                console.print("[yellow]Warning: Failed to sync IAM role tags[/yellow]")
             else:
                 console.print(
-                    f"[cyan]Synced {len(iam_role_tags)} tag(s) to IAM role {iam_role_name}[/cyan]"
+                    f"[cyan]IAM role {iam_role_name} not found — creating[/cyan]"
                 )
 
-        # Set DataDog environment variables
-        logger.debug("Setting DataDog environment variables")
-        set_env_variables(dd_env_vars)
-
-        # Check whether the DataDog account integration already exists
-        ssl_ca_cert = os.environ.get("REQUESTS_CA_BUNDLE", certifi.where())
-        verify_ssl = os.environ.get("DATADOG_VERIFY_SSL", "true").lower() != "false"
-        if not verify_ssl:
-            console.print(
-                "[yellow]Warning: SSL verification is disabled (DATADOG_VERIFY_SSL=false)[/yellow]"
+            role_response = create_or_update_dd_role(
+                client=iam_client,
+                dd_account_id=dd_acct_id,
+                managed_policies=aws_managed_policies,
+                policy_actions=aws_policy_actions,
+                role_name=iam_role_name,
             )
-            warnings.filterwarnings("ignore", message="Unverified HTTPS request")
-        configuration = Configuration(ssl_ca_cert=ssl_ca_cert if verify_ssl else None)
-        configuration.verify_ssl = verify_ssl
 
-        dd_existing = get_dd_account(configuration, aws_account_id)
-        dd_account_exists = bool(dd_existing and dd_existing.data)
+            if not role_response:
+                console.print("[red]Failed to create/update IAM role[/red]")
+                sys.exit(1)
 
-        if dd_account_exists:
-            console.print("[cyan]DataDog account integration exists — updating[/cyan]")
-            dd_action = "update"
-        else:
-            console.print(
-                "[cyan]DataDog account integration not found — creating[/cyan]"
-            )
-            dd_action = "create"
-
-        crud_response = crud_dd_account(
-            account_id=aws_account_id,
-            action=dd_action,
-            metric_settings=metric_settings,
-            partition=dd_partition,
-            regions=dd_regions,
-            resource_settings=resource_settings,
-            role_name=iam_role_name,
-            services=dd_services,
-            traces=dd_traces,
-        )
-
-        if crud_response.get("error"):
-            console.print(f"[red]Error: {crud_response.get('error')}[/red]")
-            sys.exit(1)
-
-        # On a fresh create, patch the IAM role trust policy with the External ID
-        if not dd_account_exists:
-            external_id = crud_response.get("external_id", "")
-            if external_id:
-                console.print(
-                    "[cyan]Updating IAM role trust policy with External ID[/cyan]"
-                )
-                create_or_update_dd_role(
+            if existing_role:
+                # Reconcile attached/inline policies when the role already existed
+                policy_response = ensure_role_policies(
                     client=iam_client,
-                    dd_account_id=dd_acct_id,
-                    external_id=external_id,
+                    role_name=iam_role_name,
                     managed_policies=aws_managed_policies,
                     policy_actions=aws_policy_actions,
-                    role_name=iam_role_name,
                 )
+                if not policy_response:
+                    console.print(
+                        "[yellow]Warning: Some policies may not have been updated correctly[/yellow]"
+                    )
 
-        console.print(
-            "[bold green]✓ DataDog integration applied successfully![/bold green]"
-        )
+            # Sync IAM role tags (create or update path)
+            if iam_role_tags:
+                tag_response = sync_role_tags(
+                    client=iam_client,
+                    role_name=iam_role_name,
+                    tags=iam_role_tags,
+                )
+                if not tag_response:
+                    console.print(
+                        "[yellow]Warning: Failed to sync IAM role tags[/yellow]"
+                    )
+                else:
+                    console.print(
+                        f"[cyan]Synced {len(iam_role_tags)} tag(s) to IAM role {iam_role_name}[/cyan]"
+                    )
+
+        dd_account_exists = False
+        if run_dd:
+            # Set DataDog environment variables
+            logger.debug("Setting DataDog environment variables")
+            set_env_variables(dd_env_vars)
+
+            # Check whether the DataDog account integration already exists
+            ssl_ca_cert = os.environ.get("REQUESTS_CA_BUNDLE", certifi.where())
+            verify_ssl = os.environ.get("DATADOG_VERIFY_SSL", "true").lower() != "false"
+            if not verify_ssl:
+                console.print(
+                    "[yellow]Warning: SSL verification is disabled (DATADOG_VERIFY_SSL=false)[/yellow]"
+                )
+                warnings.filterwarnings("ignore", message="Unverified HTTPS request")
+            configuration = Configuration(
+                ssl_ca_cert=ssl_ca_cert if verify_ssl else None
+            )
+            configuration.verify_ssl = verify_ssl
+
+            dd_existing = get_dd_account(configuration, aws_account_id)
+            dd_account_exists = bool(dd_existing and dd_existing.data)
+
+            if dd_account_exists:
+                console.print(
+                    "[cyan]DataDog account integration exists — updating[/cyan]"
+                )
+                dd_action = "update"
+            else:
+                console.print(
+                    "[cyan]DataDog account integration not found — creating[/cyan]"
+                )
+                dd_action = "create"
+
+            crud_response = crud_dd_account(
+                account_id=aws_account_id,
+                action=dd_action,
+                metric_settings=metric_settings,
+                partition=dd_partition,
+                regions=dd_regions,
+                resource_settings=resource_settings,
+                role_name=iam_role_name,
+                services=dd_services,
+                traces=dd_traces,
+            )
+
+            if crud_response.get("error"):
+                console.print(f"[red]Error: {crud_response.get('error')}[/red]")
+                sys.exit(1)
+
+            # On a fresh create, patch the IAM role trust policy with the External ID
+            if not dd_account_exists:
+                external_id = crud_response.get("external_id", "")
+                if external_id and run_aws and iam_client:
+                    console.print(
+                        "[cyan]Updating IAM role trust policy with External ID[/cyan]"
+                    )
+                    create_or_update_dd_role(
+                        client=iam_client,
+                        dd_account_id=dd_acct_id,
+                        external_id=external_id,
+                        managed_policies=aws_managed_policies,
+                        policy_actions=aws_policy_actions,
+                        role_name=iam_role_name,
+                    )
+                elif external_id and not run_aws:
+                    console.print(
+                        "[yellow]Warning: DataDog integration was created, but IAM trust policy was not updated because --dd-only was used.[/yellow]"
+                    )
+
+        if run_aws and run_dd:
+            console.print(
+                "[bold green]✓ DataDog integration applied successfully![/bold green]"
+            )
+        elif run_aws:
+            console.print(
+                "[bold green]✓ AWS IAM configuration applied successfully![/bold green]"
+            )
+        else:
+            console.print(
+                "[bold green]✓ DataDog configuration applied successfully![/bold green]"
+            )
 
     except Exception as e:
         console.print(f"[bold red]Error during apply: {e}[/bold red]")
@@ -1067,6 +1127,8 @@ def delete(ctx, account_id, profile, role_name, confirm, verbose, quiet, env_fil
     default="text",
     help="Output format",
 )
+@click.option("--aws-only", is_flag=True, help="Check AWS IAM status only")
+@click.option("--dd-only", is_flag=True, help="Check DataDog integration status only")
 @click.option(
     "--verbose", "-v", is_flag=True, default=False, help="Enable verbose output"
 )
@@ -1081,7 +1143,17 @@ def delete(ctx, account_id, profile, role_name, confirm, verbose, quiet, env_fil
 )
 @click.pass_context
 def status(
-    ctx, account_id, profile, role_name, dd_account_id, output, verbose, quiet, env_file
+    ctx,
+    account_id,
+    profile,
+    role_name,
+    dd_account_id,
+    output,
+    aws_only,
+    dd_only,
+    verbose,
+    quiet,
+    env_file,
 ):
     """Check the status of DataDog integration.
 
@@ -1100,11 +1172,13 @@ def status(
     if not ctx.obj.get("quiet"):
         console.print("[bold blue]Checking DataDog Integration Status[/bold blue]\n")
 
+    run_aws, run_dd = resolve_target_scope(aws_only, dd_only, "status")
+
     # Get configuration values
     aws_account_id = get_config_value(
         cli_value=account_id,
         env_var="AWS_ACCOUNT_ID",
-        required=True,
+        required=run_dd,
         param_name="AWS Account ID",
     )
     aws_profile = get_config_value(
@@ -1124,7 +1198,7 @@ def status(
     dd_acct_id = get_config_value(
         cli_value=dd_account_id,
         env_var="DD_ACCOUNT_ID",
-        required=False,
+        required=run_aws,
         param_name="DataDog Account ID",
     )
 
@@ -1185,6 +1259,7 @@ def status(
     }
 
     status_data = {
+        "check_scope": "both" if run_aws and run_dd else ("aws" if run_aws else "dd"),
         "aws_account_id": aws_account_id,
         "iam_role_name": iam_role_name,
         "iam_role_exists": False,
@@ -1217,109 +1292,119 @@ def status(
     }
 
     try:
-        # Check IAM role
-        logger.debug(f"Checking IAM role: {iam_role_name}")
+        if run_aws:
+            # Check IAM role
+            logger.debug(f"Checking IAM role: {iam_role_name}")
 
-        try:
-            base_session = create_session(profile_name=aws_profile)
-            iam_client = create_client(
-                region_name="us-east-1",
-                service_name="iam",
-                session=base_session,
-            )
-        except Exception as e:
-            logger.debug(f"Caught AWS connection error: {e}")
-            status_data["issues"].append(f"Failed to connect to AWS: {str(e)}")
-            status_data["iam_check_failed"] = True
-            console.print(f"[yellow]Warning: Could not connect to AWS: {e}[/yellow]")
-            console.print(
-                "[yellow]Skipping IAM role check. Configure AWS credentials to check IAM role status.[/yellow]\n"
-            )
-            iam_client = None
-
-        if iam_client:
             try:
-                role = get_role(iam_client, iam_role_name)
-                if role:
-                    status_data["iam_role_exists"] = True
-                    status_data["iam_role_arn"] = role.get("Arn")
-
-                    # Get attached policies
-                    attached_policies = list_attached_policies(
-                        iam_client, iam_role_name
-                    )
-                    status_data["iam_attached_policies"] = attached_policies
-
-                    # Get inline policies
-                    inline_policies = list_inline_policies(iam_client, iam_role_name)
-                    status_data["iam_inline_policies"] = inline_policies
-
-                    # Check if managed policies match expected
-                    policies_match = set(attached_policies) == set(
-                        expected_managed_policies
-                    )
-                    status_data["iam_policies_match"] = policies_match
-
-                    if not policies_match:
-                        missing = set(expected_managed_policies) - set(
-                            attached_policies
-                        )
-                        extra = set(attached_policies) - set(expected_managed_policies)
-                        if missing:
-                            status_data["issues"].append(
-                                f"Missing managed policies: {', '.join(missing)}"
-                            )
-                        if extra:
-                            status_data["issues"].append(
-                                f"Unexpected managed policies: {', '.join(extra)}"
-                            )
-
-                    # Fetch actual tags and compare to expected
-                    expected_iam_tags = get_tags_from_env()
-                    status_data["expected_iam_tags"] = expected_iam_tags
-                    actual_tags = get_role_tags(iam_client, iam_role_name)
-                    status_data["iam_role_tags"] = actual_tags
-
-                    if expected_iam_tags:
-                        expected_map = {t["Key"]: t["Value"] for t in expected_iam_tags}
-                        actual_map = {t["Key"]: t["Value"] for t in actual_tags}
-                        tags_match = expected_map == actual_map
-                        status_data["iam_tags_match"] = tags_match
-
-                        if not tags_match:
-                            missing_keys = set(expected_map) - set(actual_map)
-                            extra_keys = set(actual_map) - set(expected_map)
-                            changed_keys = {
-                                k
-                                for k in expected_map
-                                if k in actual_map and expected_map[k] != actual_map[k]
-                            }
-                            if missing_keys:
-                                status_data["issues"].append(
-                                    f"Missing IAM role tags: {', '.join(sorted(missing_keys))}"
-                                )
-                            if extra_keys:
-                                status_data["issues"].append(
-                                    f"Unexpected IAM role tags: {', '.join(sorted(extra_keys))}"
-                                )
-                            if changed_keys:
-                                status_data["issues"].append(
-                                    f"IAM role tag value mismatch: {', '.join(sorted(changed_keys))}"
-                                )
-                else:
-                    status_data["issues"].append(
-                        f"IAM role '{iam_role_name}' does not exist"
-                    )
+                base_session = create_session(profile_name=aws_profile)
+                iam_client = create_client(
+                    region_name="us-east-1",
+                    service_name="iam",
+                    session=base_session,
+                )
             except Exception as e:
-                logger.debug(f"Error checking IAM role: {e}")
-                status_data["issues"].append(f"Failed to check IAM role: {str(e)}")
+                logger.debug(f"Caught AWS connection error: {e}")
+                status_data["issues"].append(f"Failed to connect to AWS: {str(e)}")
                 status_data["iam_check_failed"] = True
                 console.print(
-                    f"[yellow]Warning: Could not check IAM role: {e}[/yellow]\n"
+                    f"[yellow]Warning: Could not connect to AWS: {e}[/yellow]"
                 )
+                console.print(
+                    "[yellow]Skipping IAM role check. Configure AWS credentials to check IAM role status.[/yellow]\n"
+                )
+                iam_client = None
+
+            if iam_client:
+                try:
+                    role = get_role(iam_client, iam_role_name)
+                    if role:
+                        status_data["iam_role_exists"] = True
+                        status_data["iam_role_arn"] = role.get("Arn")
+
+                        # Get attached policies
+                        attached_policies = list_attached_policies(
+                            iam_client, iam_role_name
+                        )
+                        status_data["iam_attached_policies"] = attached_policies
+
+                        # Get inline policies
+                        inline_policies = list_inline_policies(
+                            iam_client, iam_role_name
+                        )
+                        status_data["iam_inline_policies"] = inline_policies
+
+                        # Check if managed policies match expected
+                        policies_match = set(attached_policies) == set(
+                            expected_managed_policies
+                        )
+                        status_data["iam_policies_match"] = policies_match
+
+                        if not policies_match:
+                            missing = set(expected_managed_policies) - set(
+                                attached_policies
+                            )
+                            extra = set(attached_policies) - set(
+                                expected_managed_policies
+                            )
+                            if missing:
+                                status_data["issues"].append(
+                                    f"Missing managed policies: {', '.join(missing)}"
+                                )
+                            if extra:
+                                status_data["issues"].append(
+                                    f"Unexpected managed policies: {', '.join(extra)}"
+                                )
+
+                        # Fetch actual tags and compare to expected
+                        expected_iam_tags = get_tags_from_env()
+                        status_data["expected_iam_tags"] = expected_iam_tags
+                        actual_tags = get_role_tags(iam_client, iam_role_name)
+                        status_data["iam_role_tags"] = actual_tags
+
+                        if expected_iam_tags:
+                            expected_map = {
+                                t["Key"]: t["Value"] for t in expected_iam_tags
+                            }
+                            actual_map = {t["Key"]: t["Value"] for t in actual_tags}
+                            tags_match = expected_map == actual_map
+                            status_data["iam_tags_match"] = tags_match
+
+                            if not tags_match:
+                                missing_keys = set(expected_map) - set(actual_map)
+                                extra_keys = set(actual_map) - set(expected_map)
+                                changed_keys = {
+                                    k
+                                    for k in expected_map
+                                    if k in actual_map
+                                    and expected_map[k] != actual_map[k]
+                                }
+                                if missing_keys:
+                                    status_data["issues"].append(
+                                        f"Missing IAM role tags: {', '.join(sorted(missing_keys))}"
+                                    )
+                                if extra_keys:
+                                    status_data["issues"].append(
+                                        f"Unexpected IAM role tags: {', '.join(sorted(extra_keys))}"
+                                    )
+                                if changed_keys:
+                                    status_data["issues"].append(
+                                        f"IAM role tag value mismatch: {', '.join(sorted(changed_keys))}"
+                                    )
+                    else:
+                        status_data["issues"].append(
+                            f"IAM role '{iam_role_name}' does not exist"
+                        )
+                except Exception as e:
+                    logger.debug(f"Error checking IAM role: {e}")
+                    status_data["issues"].append(f"Failed to check IAM role: {str(e)}")
+                    status_data["iam_check_failed"] = True
+                    console.print(
+                        f"[yellow]Warning: Could not check IAM role: {e}[/yellow]\n"
+                    )
 
         # Check DataDog account if DD credentials are available
-        if os.getenv("DD_API_KEY") and os.getenv("DD_APP_KEY"):
+        if run_dd and os.getenv("DD_API_KEY") and os.getenv("DD_APP_KEY"):
             logger.debug(f"Checking DataDog account: {aws_account_id}")
 
             # Configure DataDog API client
@@ -1503,7 +1588,7 @@ def status(
             except Exception as e:
                 status_data["issues"].append(f"Failed to query DataDog API: {str(e)}")
                 status_data["dd_check_failed"] = True
-        else:
+        elif run_dd:
             status_data["issues"].append(
                 "DataDog API credentials (DD_API_KEY, DD_APP_KEY) not configured"
             )
@@ -1513,18 +1598,37 @@ def status(
         iam_check_failed = status_data["iam_check_failed"]
         dd_check_failed = status_data["dd_check_failed"]
 
-        if iam_check_failed or dd_check_failed:
-            # One or both sides couldn't be checked — can't determine true state
-            status_data["sync_status"] = "unknown"
-        elif status_data["iam_role_exists"] and status_data["dd_account_exists"]:
-            if len(status_data["issues"]) == 0:
-                status_data["sync_status"] = "synced"
+        if run_aws and not run_dd:
+            if iam_check_failed:
+                status_data["sync_status"] = "unknown"
+            elif status_data["iam_role_exists"]:
+                status_data["sync_status"] = (
+                    "synced" if len(status_data["issues"]) == 0 else "out_of_sync"
+                )
             else:
-                status_data["sync_status"] = "out_of_sync"
-        elif status_data["iam_role_exists"] or status_data["dd_account_exists"]:
-            status_data["sync_status"] = "partial"
+                status_data["sync_status"] = "not_configured"
+        elif run_dd and not run_aws:
+            if dd_check_failed:
+                status_data["sync_status"] = "unknown"
+            elif status_data["dd_account_exists"]:
+                status_data["sync_status"] = (
+                    "synced" if len(status_data["issues"]) == 0 else "out_of_sync"
+                )
+            else:
+                status_data["sync_status"] = "not_configured"
         else:
-            status_data["sync_status"] = "not_configured"
+            if iam_check_failed or dd_check_failed:
+                # One or both sides couldn't be checked — can't determine true state
+                status_data["sync_status"] = "unknown"
+            elif status_data["iam_role_exists"] and status_data["dd_account_exists"]:
+                if len(status_data["issues"]) == 0:
+                    status_data["sync_status"] = "synced"
+                else:
+                    status_data["sync_status"] = "out_of_sync"
+            elif status_data["iam_role_exists"] or status_data["dd_account_exists"]:
+                status_data["sync_status"] = "partial"
+            else:
+                status_data["sync_status"] = "not_configured"
 
         # Output results
         if output == "json":
@@ -1550,142 +1654,154 @@ def status(
             }
 
             console.print(f"[bold]AWS Account ID:[/bold] {aws_account_id}")
+            if status_data["check_scope"] != "both":
+                scope_name = "AWS" if status_data["check_scope"] == "aws" else "DataDog"
+                console.print(f"[bold]Scope:[/bold] {scope_name} only")
             console.print(
                 f"[bold]Sync Status:[/bold] [{status_color[status_data['sync_status']]}]{status_icon[status_data['sync_status']]} {status_data['sync_status'].replace('_', ' ').title()}[/{status_color[status_data['sync_status']]}]\n"
             )
 
-            # IAM Role table
-            iam_table = Table(title="IAM Role Status")
-            iam_table.add_column("Property", style="cyan")
-            iam_table.add_column("Value", style="green")
+            if run_aws:
+                # IAM Role table
+                iam_table = Table(title="IAM Role Status")
+                iam_table.add_column("Property", style="cyan")
+                iam_table.add_column("Value", style="green")
 
-            iam_table.add_row("Role Name", iam_role_name)
-            iam_table.add_row(
-                "Exists",
-                (
-                    "[green]Yes[/green]"
-                    if status_data["iam_role_exists"]
-                    else "[red]No[/red]"
-                ),
-            )
-            if status_data["iam_role_arn"]:
-                iam_table.add_row("ARN", status_data["iam_role_arn"])
-            if status_data["iam_attached_policies"]:
+                iam_table.add_row("Role Name", iam_role_name)
                 iam_table.add_row(
-                    "Managed Policies",
-                    f"{len(status_data['iam_attached_policies'])} attached",
-                )
-            if status_data["iam_inline_policies"]:
-                iam_table.add_row(
-                    "Inline Policies",
-                    f"{len(status_data['iam_inline_policies'])} policies",
-                )
-            iam_table.add_row(
-                "Policies Match Expected",
-                (
-                    "[green]Yes[/green]"
-                    if status_data["iam_policies_match"]
-                    else "[yellow]No[/yellow]"
-                ),
-            )
-            if status_data["iam_role_tags"]:
-                iam_table.add_row(
-                    "Tags",
-                    f"{len(status_data['iam_role_tags'])} tag(s)",
-                )
-            if status_data["expected_iam_tags"]:
-                iam_table.add_row(
-                    "Tags Match Expected",
+                    "Exists",
                     (
                         "[green]Yes[/green]"
-                        if status_data["iam_tags_match"]
+                        if status_data["iam_role_exists"]
+                        else "[red]No[/red]"
+                    ),
+                )
+                if status_data["iam_role_arn"]:
+                    iam_table.add_row("ARN", status_data["iam_role_arn"])
+                if status_data["iam_attached_policies"]:
+                    iam_table.add_row(
+                        "Managed Policies",
+                        f"{len(status_data['iam_attached_policies'])} attached",
+                    )
+                if status_data["iam_inline_policies"]:
+                    iam_table.add_row(
+                        "Inline Policies",
+                        f"{len(status_data['iam_inline_policies'])} policies",
+                    )
+                iam_table.add_row(
+                    "Policies Match Expected",
+                    (
+                        "[green]Yes[/green]"
+                        if status_data["iam_policies_match"]
+                        else "[yellow]No[/yellow]"
+                    ),
+                )
+                if status_data["iam_role_tags"]:
+                    iam_table.add_row(
+                        "Tags",
+                        f"{len(status_data['iam_role_tags'])} tag(s)",
+                    )
+                if status_data["expected_iam_tags"]:
+                    iam_table.add_row(
+                        "Tags Match Expected",
+                        (
+                            "[green]Yes[/green]"
+                            if status_data["iam_tags_match"]
+                            else "[yellow]No[/yellow]"
+                        ),
+                    )
+
+                console.print(iam_table)
+
+                # Tag comparison table
+                if (
+                    not status_data["iam_tags_match"]
+                    and status_data["expected_iam_tags"]
+                ):
+                    console.print()
+                    tag_table = Table(title="IAM Role Tag Comparison")
+                    tag_table.add_column("Key", style="cyan")
+                    tag_table.add_column("Expected", style="green")
+                    tag_table.add_column("Actual", style="yellow")
+
+                    expected_map = {
+                        t["Key"]: t["Value"] for t in status_data["expected_iam_tags"]
+                    }
+                    actual_map = {
+                        t["Key"]: t["Value"] for t in status_data["iam_role_tags"]
+                    }
+                    all_keys = sorted(set(expected_map) | set(actual_map))
+                    for key in all_keys:
+                        exp_val = expected_map.get(key, "[dim](not set)[/dim]")
+                        act_val = actual_map.get(key, "[dim](not set)[/dim]")
+                        if exp_val != act_val:
+                            tag_table.add_row(key, exp_val, act_val)
+
+                    console.print(tag_table)
+
+                console.print()
+
+            if run_dd:
+                # DataDog Account table
+                dd_table = Table(title="DataDog Integration Status")
+                dd_table.add_column("Property", style="cyan")
+                dd_table.add_column("Value", style="green")
+
+                dd_table.add_row(
+                    "Account Registered",
+                    (
+                        "[green]Yes[/green]"
+                        if status_data["dd_account_exists"]
+                        else "[red]No[/red]"
+                    ),
+                )
+                if status_data["dd_account_id"]:
+                    dd_table.add_row("DataDog Account ID", status_data["dd_account_id"])
+                if status_data["dd_role_name"]:
+                    dd_table.add_row("Role Name", status_data["dd_role_name"])
+                if status_data["dd_external_id"]:
+                    dd_table.add_row(
+                        "External ID", status_data["dd_external_id"][:20] + "..."
+                    )
+                if status_data["dd_partition"]:
+                    dd_table.add_row("Partition", status_data["dd_partition"])
+                if status_data["dd_regions"]:
+                    dd_table.add_row(
+                        "Regions",
+                        ", ".join(status_data["dd_regions"][:5])
+                        + (
+                            f" (+{len(status_data['dd_regions']) - 5} more)"
+                            if len(status_data["dd_regions"]) > 5
+                            else ""
+                        ),
+                    )
+                if status_data["dd_services"]:
+                    dd_table.add_row(
+                        "Services",
+                        ", ".join(status_data["dd_services"][:5])
+                        + (
+                            f" (+{len(status_data['dd_services']) - 5} more)"
+                            if len(status_data["dd_services"]) > 5
+                            else ""
+                        ),
+                    )
+                dd_table.add_row(
+                    "Config Matches Expected",
+                    (
+                        "[green]Yes[/green]"
+                        if status_data["config_matches"]
                         else "[yellow]No[/yellow]"
                     ),
                 )
 
-            console.print(iam_table)
-
-            # Tag comparison table
-            if not status_data["iam_tags_match"] and status_data["expected_iam_tags"]:
-                console.print()
-                tag_table = Table(title="IAM Role Tag Comparison")
-                tag_table.add_column("Key", style="cyan")
-                tag_table.add_column("Expected", style="green")
-                tag_table.add_column("Actual", style="yellow")
-
-                expected_map = {
-                    t["Key"]: t["Value"] for t in status_data["expected_iam_tags"]
-                }
-                actual_map = {
-                    t["Key"]: t["Value"] for t in status_data["iam_role_tags"]
-                }
-                all_keys = sorted(set(expected_map) | set(actual_map))
-                for key in all_keys:
-                    exp_val = expected_map.get(key, "[dim](not set)[/dim]")
-                    act_val = actual_map.get(key, "[dim](not set)[/dim]")
-                    if exp_val != act_val:
-                        tag_table.add_row(key, exp_val, act_val)
-
-                console.print(tag_table)
-
-            console.print()
-
-            # DataDog Account table
-            dd_table = Table(title="DataDog Integration Status")
-            dd_table.add_column("Property", style="cyan")
-            dd_table.add_column("Value", style="green")
-
-            dd_table.add_row(
-                "Account Registered",
-                (
-                    "[green]Yes[/green]"
-                    if status_data["dd_account_exists"]
-                    else "[red]No[/red]"
-                ),
-            )
-            if status_data["dd_account_id"]:
-                dd_table.add_row("DataDog Account ID", status_data["dd_account_id"])
-            if status_data["dd_role_name"]:
-                dd_table.add_row("Role Name", status_data["dd_role_name"])
-            if status_data["dd_external_id"]:
-                dd_table.add_row(
-                    "External ID", status_data["dd_external_id"][:20] + "..."
-                )
-            if status_data["dd_partition"]:
-                dd_table.add_row("Partition", status_data["dd_partition"])
-            if status_data["dd_regions"]:
-                dd_table.add_row(
-                    "Regions",
-                    ", ".join(status_data["dd_regions"][:5])
-                    + (
-                        f" (+{len(status_data['dd_regions']) - 5} more)"
-                        if len(status_data["dd_regions"]) > 5
-                        else ""
-                    ),
-                )
-            if status_data["dd_services"]:
-                dd_table.add_row(
-                    "Services",
-                    ", ".join(status_data["dd_services"][:5])
-                    + (
-                        f" (+{len(status_data['dd_services']) - 5} more)"
-                        if len(status_data["dd_services"]) > 5
-                        else ""
-                    ),
-                )
-            dd_table.add_row(
-                "Config Matches Expected",
-                (
-                    "[green]Yes[/green]"
-                    if status_data["config_matches"]
-                    else "[yellow]No[/yellow]"
-                ),
-            )
-
-            console.print(dd_table)
+                console.print(dd_table)
 
             # Configuration Comparison table (if mismatches exist)
-            if not status_data["config_matches"] and status_data["dd_account_exists"]:
+            if (
+                run_dd
+                and not status_data["config_matches"]
+                and status_data["dd_account_exists"]
+            ):
                 console.print()
                 config_table = Table(title="Configuration Comparison")
                 config_table.add_column("Setting", style="cyan")

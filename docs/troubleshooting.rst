@@ -44,6 +44,20 @@ Configuration Drift
    # Fix all drift with apply
    ddutil apply
 
+First-Time ``--dd-only`` Apply
+------------------------------
+
+If you run ``ddutil apply --dd-only`` for a brand-new integration, DataDog may return
+an External ID that must be written into the IAM role trust policy.
+
+Because ``--dd-only`` intentionally skips AWS writes, run this next:
+
+.. code-block:: bash
+
+   ddutil apply --aws-only
+
+This updates the IAM trust policy with the External ID and completes the setup.
+
 SSL Certificate Errors (Internal CA)
 --------------------------------------
 
