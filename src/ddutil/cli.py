@@ -35,10 +35,10 @@ from .common.aws.iam import (
     ensure_role_policies,
     delete_dd_role,
     get_role,
+    get_inline_policy_actions,
     get_role_tags,
     list_attached_policies,
     list_inline_policies,
-    get_inline_policy,
     sync_role_tags,
 )
 from .common.datadog.aws import crud_dd_account, get_dd_account
@@ -1214,6 +1214,47 @@ def status(
         default=default_managed_policies,
     )
 
+    default_policy_actions = [
+        "appconfig:Get*",
+        "appconfig:List*",
+        "app-integrations:List*",
+        "b2bi:List*",
+        "bcm-data-exports:Get*",
+        "bcm-data-exports:List*",
+        "bedrock:List*",
+        "codeartifact:Describe*",
+        "codeartifact:List*",
+        "controltower:Get*",
+        "controltower:List*",
+        "cur:Describe*",
+        "emr-containers:List*",
+        "geo:List*",
+        "iotfleetwise:List*",
+        "kendra:List*",
+        "macie2:List*",
+        "managedblockchain:List*",
+        "medialive:List*",
+        "mediatailor:List*",
+        "network-firewall:List*",
+        "proton:List*",
+        "redshift-serverless:List*",
+        "social-messaging:List*",
+        "support:Describe*",
+        "support:Refresh*",
+        "textract:List*",
+        "wisdom:List*",
+        "workspaces-web:List*",
+        "events:CreateEventBus",
+        "logs:DeleteSubscriptionFilter",
+        "logs:PutSubscriptionFilter",
+        "s3:PutBucketNotification",
+        "sns:Publish",
+    ]
+    expected_policy_actions = get_list_config(
+        env_var="DD_POLICY_ACTIONS",
+        default=default_policy_actions,
+    )
+
     # Get expected configuration from .env or defaults
     expected_regions = get_list_config(env_var="DD_REGIONS")
 
@@ -1269,8 +1310,11 @@ def status(
         "iam_attached_policies": [],
         "iam_inline_policies": [],
         "iam_policies_match": False,
+        "iam_inline_policy_actions": [],
+        "iam_inline_policy_actions_match": False,
         "iam_role_tags": [],
         "expected_iam_tags": [],
+        "expected_policy_actions": expected_policy_actions,
         "iam_tags_match": True,
         "dd_account_exists": False,
         "dd_account_id": None,
@@ -1335,6 +1379,40 @@ def status(
                             iam_client, iam_role_name
                         )
                         status_data["iam_inline_policies"] = inline_policies
+
+                        inline_policy_actions = get_inline_policy_actions(
+                            iam_client, iam_role_name
+                        )
+                        status_data["iam_inline_policy_actions"] = inline_policy_actions
+
+                        inline_policy_actions_match = set(inline_policy_actions) == set(
+                            expected_policy_actions
+                        )
+                        status_data["iam_inline_policy_actions_match"] = (
+                            inline_policy_actions_match
+                        )
+
+                        if "datadog" not in inline_policies:
+                            status_data["issues"].append(
+                                "Missing inline policy: datadog"
+                            )
+                        elif not inline_policy_actions_match:
+                            missing_actions = set(expected_policy_actions) - set(
+                                inline_policy_actions
+                            )
+                            extra_actions = set(inline_policy_actions) - set(
+                                expected_policy_actions
+                            )
+                            if missing_actions:
+                                status_data["issues"].append(
+                                    "Missing inline policy actions: "
+                                    f"{', '.join(sorted(missing_actions))}"
+                                )
+                            if extra_actions:
+                                status_data["issues"].append(
+                                    "Unexpected inline policy actions: "
+                                    f"{', '.join(sorted(extra_actions))}"
+                                )
 
                         # Check if managed policies match expected
                         policies_match = set(attached_policies) == set(
@@ -1689,6 +1767,15 @@ def status(
                     iam_table.add_row(
                         "Inline Policies",
                         f"{len(status_data['iam_inline_policies'])} policies",
+                    )
+                if status_data["iam_inline_policies"]:
+                    iam_table.add_row(
+                        "Inline Actions Match Expected",
+                        (
+                            "[green]Yes[/green]"
+                            if status_data["iam_inline_policy_actions_match"]
+                            else "[yellow]No[/yellow]"
+                        ),
                     )
                 iam_table.add_row(
                     "Policies Match Expected",

@@ -274,6 +274,41 @@ def get_inline_policy(client, role_name: str, policy_name: str):
         return None
 
 
+def extract_policy_actions(policy_document: dict | None) -> list[str]:
+    """Return a sorted unique list of actions from an IAM policy document."""
+    if not policy_document:
+        return []
+
+    statements = policy_document.get("Statement", [])
+    if isinstance(statements, dict):
+        statements = [statements]
+
+    actions: set[str] = set()
+    for statement in statements:
+        if not isinstance(statement, dict):
+            continue
+
+        statement_actions = statement.get("Action", [])
+        if isinstance(statement_actions, str):
+            actions.add(statement_actions)
+            continue
+
+        if isinstance(statement_actions, list):
+            for action in statement_actions:
+                if isinstance(action, str):
+                    actions.add(action)
+
+    return sorted(actions)
+
+
+def get_inline_policy_actions(
+    client, role_name: str, policy_name: str = "datadog"
+) -> list[str]:
+    """Return the normalized action list for a role inline policy."""
+    policy_document = get_inline_policy(client, role_name, policy_name)
+    return extract_policy_actions(policy_document)
+
+
 def delete_inline_policies(client, role_name: str) -> bool:
     """Delete all inline policies from a role."""
     try:
