@@ -439,8 +439,7 @@ def get_services_from_env() -> list[str]:
         "SCHEDULER": "AWS/Scheduler",
         "STATES": "AWS/States",
         "SWF": "AWS/SWF",
-        # Quotas & Support
-        "SERVICE_QUOTAS": "AWS/ServiceQuotas",
+        # Usage & Support
         "TRUSTED_ADVISOR": "AWS/TrustedAdvisor",
         "USAGE": "AWS/Usage",
         # Email
